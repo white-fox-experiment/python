@@ -30,14 +30,15 @@ def format_raw_data(rawData):
     lines = [line for line in rawData]
 
     # Parse lines into a dictionary
-    dataFeed = []
+    datafeed = []
     for line in lines:
         if len(line) == 0 or line[0] == '#':
             continue
         else:
             vendorJSON = createVendorJSON(line)
-            dataFeed.append(vendorJSON)
-    return dataFeed
+            datafeed.append(vendorJSON)
+    return datafeed
+
 
 def createVendorJSON(line):
     vendors = ""
@@ -85,5 +86,5 @@ def displayPrettyJSON(payload):
 
 request = create_browser()
 rawData = get_raw_data(request)
-dataFeed = format_raw_data(rawData)
-displayPrettyJSON(payload)
+datafeed = format_raw_data(rawData)
+displayPrettyJSON(json.dumps(datafeed))
