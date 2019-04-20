@@ -1,0 +1,89 @@
+import requests, json, os, re, time
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+def create_browser():
+    """
+    This Function Initiates a Browser Instance.
+    """
+    request = requests.session()
+    #request.proxies['http'] = ''
+    request.headers.clear()
+    request.headers.update({'Content-Type': 'application/json','Accept': 'application/json'})
+    return request
+
+def get_raw_data(request):
+    url = 'http://www.linux-usb.org/usb.ids'
+    response = request.get(url, verify=False)
+
+    if not response.ok:
+        print("Failed to make the request. {} returned from the server.".format(response.status_code))
+        return response
+    else:
+        rawData = response.text
+        return rawData
+
+def format_raw_data(rawData):
+    # Parse each line into a list
+    rawData = re.sub("\\n(?=\\t)", "", rawData)
+    rawData = rawData.splitlines()
+    lines = [line for line in rawData]
+
+    # Parse lines into a dictionary
+    dataFeed = []
+    for line in lines:
+        if len(line) == 0 or line[0] == '#':
+            continue
+        else:
+            vendorJSON = createVendorJSON(line)
+            dataFeed.append(vendorJSON)
+    return dataFeed
+
+def createVendorJSON(line):
+    vendors = ""
+    products = []    
+    counter = 0
+    reformatedData = line.replace("\t", "\n")
+    reformatedData = reformatedData.replace("\,", "")
+    anyDevices = re.search("\\n", reformatedData)
+    records = reformatedData.splitlines()
+    for record in records: 
+        if counter == 0:
+            items = removeUnwantedChar(record)
+            vendorID = items[0]
+            vendorName = items[1]
+            vendors = "'vendorID' : '" + vendorID + "', 'vendorName' : '" + vendorName + "',"
+            counter += 1
+        else:
+            try:
+                items = removeUnwantedChar(record)
+                productID = items[0]
+                productName = items[1]
+                product = "{'productID' : '" + productID + "', 'productName' : '" + productName + "'}"
+            except:
+                product = "{'productID' : 'N/A', 'productName' : 'N/A'}"
+            products.append(product)
+    if anyDevices == None:
+        devices = "{'productID' : 'N/A', 'productName' : 'N/A'}"
+    else:
+        devices = ','.join(products)
+    vendorJSON = "{" + vendors + "'devices' : [" + devices + "]}"
+    return vendorJSON
+
+def removeUnwantedChar (record):
+    item = re.sub("\s\s", "%$&", record)
+    item = re.sub("\[", "(", item)
+    item = re.sub("\]", ")", item)
+    item = re.sub("\"", " inch", item)
+    items = item.split("%$&")     
+    return items
+
+def displayPrettyJSON(payload):
+    parsed = json.loads(payload)
+    print(json.dumps(parsed, indent=2, sort_keys=True))
+
+
+request = create_browser()
+rawData = get_raw_data(request)
+dataFeed = format_raw_data(rawData)
+displayPrettyJSON(payload)
