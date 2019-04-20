@@ -2,6 +2,7 @@ import requests, json, os, re, time
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+# Definitions
 def create_browser():
     """
     This Function Initiates a Browser Instance.
@@ -21,7 +22,7 @@ def get_raw_data(request):
         return response
     else:
         rawData = response.text
-        return rawData
+    return rawData
 
 def format_raw_data(rawData):
     # Parse each line into a list
@@ -41,34 +42,34 @@ def format_raw_data(rawData):
 
 
 def createVendorJSON(line):
-    vendors = ""
-    products = []    
+    vendorJSON = {}
     counter = 0
     reformatedData = line.replace("\t", "\n")
     reformatedData = reformatedData.replace("\,", "")
     anyDevices = re.search("\\n", reformatedData)
     records = reformatedData.splitlines()
-    for record in records: 
+    for record in records:
+        devices = []
+        product = {}
         if counter == 0:
             items = removeUnwantedChar(record)
-            vendorID = items[0]
-            vendorName = items[1]
-            vendors = "'vendorID' : '" + vendorID + "', 'vendorName' : '" + vendorName + "',"
+            vendorJSON['vendorID'] = items[0]
+            vendorJSON['vendorName'] = items[1]
             counter += 1
         else:
             try:
                 items = removeUnwantedChar(record)
-                productID = items[0]
-                productName = items[1]
-                product = "{'productID' : '" + productID + "', 'productName' : '" + productName + "'}"
+                product['productID'] = items[0]
+                product['productName'] = items[1]
             except:
-                product = "{'productID' : 'N/A', 'productName' : 'N/A'}"
-            products.append(product)
+                product['productID'] = "N/A"
+                product['productName'] = "N/A"
+            devices.append(product)
     if anyDevices == None:
-        devices = "{'productID' : 'N/A', 'productName' : 'N/A'}"
-    else:
-        devices = ','.join(products)
-    vendorJSON = "{" + vendors + "'devices' : [" + devices + "]}"
+        product['productID'] = "N/A"
+        product['productName'] = "N/A"
+        devices.append(product)
+    vendorJSON['devices'] = devices
     return vendorJSON
 
 def removeUnwantedChar (record):
@@ -79,12 +80,16 @@ def removeUnwantedChar (record):
     items = item.split("%$&")     
     return items
 
+def create_payload(datafeed):
+    payload = "{" + f'"vendorProducts" :  ' + json.dumps(datafeed) + "}"
+    return payload
+    
 def displayPrettyJSON(payload):
     parsed = json.loads(payload)
     print(json.dumps(parsed, indent=2, sort_keys=True))
 
-
 request = create_browser()
 rawData = get_raw_data(request)
 datafeed = format_raw_data(rawData)
-displayPrettyJSON(json.dumps(datafeed))
+payload = create_payload(datafeed)
+displayPrettyJSON(payload)
