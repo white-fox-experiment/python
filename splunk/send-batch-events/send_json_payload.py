@@ -71,5 +71,5 @@ if __name__ == "__main__":
    
 """
 See following file(s) for example(s):
-Batch Payload - "sample_event_batch.json"
+Batch Payload - "sample_batch_events.json"
 """
