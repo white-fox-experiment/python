@@ -1,0 +1,26 @@
+[
+    {
+        "index": "test",
+        "sourcetype":"abc:def:ghi",
+        "event": {
+            "fruit_type": "pineapple",
+            "color": "yellow",
+            "texture": "rough",
+            "properties": ["grows on trees", "has green husk"],
+            "sugar_level": "89g"
+        },
+        "time": 1534976181.7054026
+    },
+	{
+        "index": "test",
+        "sourcetype":"abc:def:ghi",
+        "event": {
+          "fruit_type": "orange",
+          "color": "orange",
+          "texture": "smooth",
+          "properties": ["grows on bush", "is a type of citrus"],
+          "sugar_level": "9g"
+    	},
+        "time": 1534976181.7054026
+    }
+]
